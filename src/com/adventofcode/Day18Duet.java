@@ -4,19 +4,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class Day18Duet {
+public class Day18Duet implements Runnable{
 
     private final List<String> instructions;
     private Map<String, Long> regs;
     private Map<String, Operation> ops;
+//    part 2
+    private Deque<Long> messaging;
     Operation set;
 
     Day18Duet(String path){
         instructions = Day18Duet.parseInstructions(path);
         regs = new HashMap<>();
-        ops = buildOperations();
+        ops = buildOperationsPart2();
+        messaging = new ArrayDeque<>();
     }
-
+//  Part 1
     private Map<String,Operation> buildOperations() {
         Map<String,Operation> toRet = new HashMap<>();
         toRet.put("add",new Summing());
@@ -26,18 +29,24 @@ public class Day18Duet {
         toRet.put("snd",new Sending());
         return toRet;
     }
-
-    public static void main(String[] args){
-        Day18Duet app = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
-        app.solve();
-
-        System.out.println(app.regs);
-//        app.set = app.makeSetting();
-//        System.out.println(app.set.ex("set",Optional.of(3)));
+    private Map<String,Operation> buildOperationsPart2() {
+        Map<String,Operation> toRet = new HashMap<>();
+        toRet.put("add",new Summing());
+        toRet.put("mul",new Multing());
+        toRet.put("set",new Setting());
+        toRet.put("mod",new Moding());
+        toRet.put("snd",new SendingPart2());
+        return toRet;
     }
 
-    private Operation makeSetting() {
-        return new Setting();
+    public static void main(String[] args){
+//        Day18Duet app = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
+//        app.solve();
+//
+//        System.out.println(app.regs);
+        Day18Duet p1 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
+        Day18Duet p2 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
+
     }
 
     private void solve() {
@@ -76,6 +85,12 @@ public class Day18Duet {
         }
         return new Instruction(tokens[0], Optional.of(Long.parseLong(tokens[2])),tokens[1]);
     }
+
+    @Override
+    public void run() {
+        solve();
+    }
+
     class Instruction{
         final String operation;
         final String registerId;
@@ -147,4 +162,10 @@ public class Day18Duet {
         return toRet;
     }
 
+    private class SendingPart2 implements Operation {
+        @Override
+        public Optional<Long> ex(String registerId, Optional<Long> operand) {
+            return Optional.empty();
+        }
+    }
 }
