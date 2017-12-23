@@ -1,11 +1,8 @@
 package com.adventofcode;
 
-import jdk.nashorn.internal.ir.CatchNode;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Day8Registers {

@@ -1,8 +1,5 @@
 package com.passbyreference;
 
-
-import javafx.scene.input.Mnemonic;
-
 public class TestingReference {
     public static void main(String[] args){
         int l = 1;

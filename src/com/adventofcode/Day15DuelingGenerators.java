@@ -1,7 +1,5 @@
 package com.adventofcode;
 
-import javafx.util.Pair;
-
 import java.util.Optional;
 
 public class Day15DuelingGenerators {
