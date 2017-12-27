@@ -3,6 +3,7 @@ package com.adventofcode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Day18Duet implements Runnable{
 
@@ -11,13 +12,21 @@ public class Day18Duet implements Runnable{
     private Map<String, Operation> ops;
 //    part 2
     private Deque<Long> messaging;
-    Operation set;
-
-    Day18Duet(String path){
+    private int counter;
+    boolean running;
+    Day18Duet other;
+    private boolean recieving;
+    private int threadId;
+    private int sent;
+    Day18Duet(String path, int threadId){
         instructions = Day18Duet.parseInstructions(path);
         regs = new HashMap<>();
         ops = buildOperationsPart2();
-        messaging = new ArrayDeque<>();
+        messaging = new ConcurrentLinkedDeque<>();
+        counter = 0;
+        recieving = false;
+        this.threadId = threadId;
+        sent = 0;
     }
 //  Part 1
     private Map<String,Operation> buildOperations() {
@@ -40,12 +49,34 @@ public class Day18Duet implements Runnable{
     }
 
     public static void main(String[] args){
-//        Day18Duet app = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
+//        Day18Duet app = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt",1);
 //        app.solve();
 //
 //        System.out.println(app.regs);
-        Day18Duet p1 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
-        Day18Duet p2 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt");
+        Day18Duet p1 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt",1);
+        Day18Duet p2 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt",2);
+        p1.setOther(p2);
+        p1.regs.put("p",0L);
+        p2.setOther(p1);
+        p2.regs.put("p",1L);
+        Thread t1 = new Thread(p1);
+        Thread t2 = new Thread(p2);
+        t1.start();
+        while(t1.isAlive()){}
+        t2.start();
+        while(t2.isAlive()){}
+        while(p1.messaging.size()>0 || p2.messaging.size()>0){
+            System.out.println(p1.messaging.size()+" "+p2.messaging.size());
+            p1.solve2();
+            while(p1.running){}
+            p2.solve2();
+            while(p2.running){}
+        }
+////        p1.solve2();
+////        while(p1.running){}
+////        p2.solve2();
+        System.out.println(t1.getState());
+        System.out.println(t2.getState());
 
     }
 
@@ -63,7 +94,7 @@ public class Day18Duet implements Runnable{
                 continue;
             }
             Operation op = ops.get(cur.operation);
-            System.out.println(cur.registerId+","+cur.operand);
+//            System.out.println(cur.registerId+","+cur.operand);
             Optional<Long> result = op.ex(cur.registerId,cur.operand);
             if(result.isPresent()){
                 regs.put(cur.registerId,result.get());
@@ -76,7 +107,7 @@ public class Day18Duet implements Runnable{
 
     private Instruction parseInstruction(String inst) {
         String[] tokens = inst.split(" ");
-        System.out.println(Arrays.toString(tokens));
+//        System.out.println(threadId+": "+Arrays.toString(tokens));
         if(tokens.length==2){
             return new Instruction(tokens[0],Optional.empty(),tokens[1]);
         }
@@ -88,7 +119,62 @@ public class Day18Duet implements Runnable{
 
     @Override
     public void run() {
-        solve();
+        solve2();
+    }
+
+    private void solve2() {
+        running = true;
+        while(counter<instructions.size()&& counter>=0 && running){
+            System.out.println(threadId+" " +counter);
+            Instruction cur = parseInstruction(instructions.get(counter));
+            if(cur.operation.equals("rcv")) {
+                if(other.messaging.size()==0){
+                    recieving = true;
+                    running = false;
+                    if(other.recieving) {
+                        System.out.println(threadId+ "sent: "+sent+" messaging.size: " +other.messaging.size());
+                        System.out.println(other.threadId+ "sent: "+other.sent+" messaging.size: " +messaging.size());
+//                        throw new Error("the other is recieving");
+                    }
+                } else {
+                    recieving = false;
+                    regs.put(cur.registerId, other.messaging.removeFirst());
+                    counter++;
+//                    System.out.println(threadId+": "+regs+", running: " + running+", recieving: " + recieving);
+                }
+                continue;
+            }
+            if(cur.operation.equals("jgz")){
+                if(Character.isAlphabetic(cur.registerId.charAt(0))){
+                    if(regs.getOrDefault(cur.registerId,0L)>0L) {
+                        counter += cur.operand.get();
+                        continue;
+                    }
+                } else {
+                    long num = Long.parseLong(cur.registerId);
+                    if(num>0L){
+                        counter += cur.operand.get();
+                        continue;
+                    }
+                }
+                counter++;
+                continue;
+            }
+            Operation op = ops.get(cur.operation);
+            Optional<Long> result = op.ex(cur.registerId,cur.operand);
+//            System.out.println(threadId+": "+cur.registerId+","+cur.operand);
+            if(result.isPresent()){
+                regs.put(cur.registerId,result.get());
+            }
+//            System.out.println(threadId+": "+regs+", running: " + running+", recieving: " + recieving);
+
+            counter++;
+        }
+//        System.out.println(threadId+"paused having sent: " + sent);
+    }
+
+    public void setOther(Day18Duet other) {
+        this.other = other;
     }
 
     class Instruction{
@@ -165,6 +251,16 @@ public class Day18Duet implements Runnable{
     private class SendingPart2 implements Operation {
         @Override
         public Optional<Long> ex(String registerId, Optional<Long> operand) {
+            if(Character.isAlphabetic(registerId.charAt(0))){
+                messaging.addLast(regs.getOrDefault(registerId,0L));
+            } else {
+                messaging.addLast(Long.parseLong(registerId));
+            }
+            sent++;
+            if(!other.running && other.recieving){
+//                System.out.println("restarting "+other.threadId);
+//                other.solve2();
+            }
             return Optional.empty();
         }
     }
