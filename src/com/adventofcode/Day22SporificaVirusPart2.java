@@ -6,12 +6,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class Day22SporificaVirus {
+public class Day22SporificaVirusPart2 {
     private Carrier car;
     private Map<String,String> map;
 
-    public Day22SporificaVirus(String path) {
-        map = Day22SporificaVirus.parseMap(path);
+    public Day22SporificaVirusPart2(String path) {
+        map = Day22SporificaVirusPart2.parseMap(path);
         //τεστ Μαπ
 //        map = new HashMap<>();
 //        map.put("-1,-1",".");
@@ -39,9 +39,9 @@ public class Day22SporificaVirus {
     }
 
     public static void main(String[] args) {
-        Day22SporificaVirus app = new Day22SporificaVirus("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day22.txt");
+        Day22SporificaVirusPart2 app = new Day22SporificaVirusPart2("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day22.txt");
         app.printMap();
-        for(int i=0;i<10000;i++){
+        for(int i=0;i<10000000;i++){
             app.car.act(app.map);
 //            app.printMap();
         }
@@ -72,21 +72,45 @@ public class Day22SporificaVirus {
             cleaned = 0;
         }
         public void act(Map<String,String> map){
-            if(map.getOrDefault(x+","+y,".").equals("#")) actInfected(map);
-            else actClean(map);
+            String cur  = map.getOrDefault(x+","+y,".");
+            switch (cur){
+                case ".":
+                    actClean(map);
+                    break;
+                case "#":
+                    actInfected(map);
+                    break;
+                case "W":
+                    actWeakened(map);
+                    break;
+                case "F":
+                    actFlagged(map);
+                    break;
+            }
+        }
+
+        private void actFlagged(Map<String, String> map) {
+            curMove= (curMove+2)%moves.size();
+            map.put(x+","+y,".");
+            move();
+            cleaned++;
 
         }
+
         private void actClean(Map<String, String> map) {
             turnLeft();
+            map.put(x+","+y,"W");
+            move();
+        }
+        private void actWeakened(Map<String, String> map) {
             map.put(x+","+y,"#");
             move();
             infected++;
         }
         private void actInfected(Map<String, String> map) {
             turnRight();
-            map.put(x+","+y,".");
+            map.put(x+","+y,"F");
             move();
-            cleaned++;
         }
 
         public void turnLeft(){
