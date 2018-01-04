@@ -53,8 +53,8 @@ public class Day18Duet implements Runnable{
 //        app.solve();
 //
 //        System.out.println(app.regs);
-        Day18Duet p1 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt",1);
-        Day18Duet p2 = new Day18Duet("C:\\Users\\papakos\\Desktop\\Projects\\JavaQuestions\\AdventOfCode2017\\inputs\\Day18.txt",2);
+        Day18Duet p1 = new Day18Duet("C:\\Users\\npappas\\IdeaProjects\\AdventOfCode2017\\inputs\\Day18.txt",1);
+        Day18Duet p2 = new Day18Duet("C:\\Users\\npappas\\IdeaProjects\\AdventOfCode2017\\inputs\\Day18.txt",2);
         p1.setOther(p2);
         p1.regs.put("p",0L);
         p2.setOther(p1);
@@ -105,9 +105,9 @@ public class Day18Duet implements Runnable{
         }
     }
 
-    private Instruction parseInstruction(String inst) {
+    Instruction parseInstruction(String inst) {
         String[] tokens = inst.split(" ");
-//        System.out.println(threadId+": "+Arrays.toString(tokens));
+        System.out.println(threadId+": "+Arrays.toString(tokens));
         if(tokens.length==2){
             return new Instruction(tokens[0],Optional.empty(),tokens[1]);
         }
@@ -177,7 +177,7 @@ public class Day18Duet implements Runnable{
         this.other = other;
     }
 
-    class Instruction{
+    static class Instruction{
         final String operation;
         final String registerId;
         final Optional<Long> operand;
@@ -186,6 +186,9 @@ public class Day18Duet implements Runnable{
             this.registerId = registerId;
             this.operand = operand;
             this.operation = operation;
+        }
+        public String toString(){
+            return "" + registerId+" "+operation+" "+ operand;
         }
     }
     interface Operation{
@@ -226,7 +229,7 @@ public class Day18Duet implements Runnable{
         }
     }
 
-    private static List<String> parseInstructions(String path) {
+    static List<String> parseInstructions(String path) {
         ArrayList<String> toRet = new ArrayList<>();
         ArrayList<String> lines = new ArrayList<>();
         Scanner s = null;
